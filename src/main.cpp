@@ -355,8 +355,74 @@ static WebServer httpServer(80);
 
 static void handleRoot()
 {
-    httpServer.sendHeader("Location", "/settings");
-    httpServer.send(301);
+    // In AP mode the user needs the settings page to configure WiFi.
+    if (wifiState != WS_CONNECTED) {
+        httpServer.sendHeader("Location", "/settings");
+        httpServer.send(302);
+        return;
+    }
+
+    // Build device-info strings before streaming HTML.
+    char ip[16], timeStr[10], ssid[33];
+    IPAddress a = WiFi.localIP();
+    snprintf(ip, sizeof(ip), "%u.%u.%u.%u", a[0], a[1], a[2], a[3]);
+    strlcpy(ssid, WiFi.SSID().c_str(), sizeof(ssid));
+
+    struct tm ti;
+    if (getLocalTime(&ti, 0) && ti.tm_year > 120)
+        snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d",
+                 ti.tm_hour, ti.tm_min, ti.tm_sec);
+    else
+        strlcpy(timeStr, "--:--:--", sizeof(timeStr));
+
+    httpServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    httpServer.send(200, "text/html", "");
+
+    httpServer.sendContent(
+        "<!DOCTYPE html><html><head>"
+        "<meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<title>ESP32-C6-Touch</title>"
+        "<style>"
+        "*, *::before, *::after{box-sizing:border-box;margin:0;padding:0}"
+        "body{font-family:sans-serif;background:#1a1a2e;color:#eee;"
+        "display:flex;align-items:center;justify-content:center;"
+        "min-height:100vh;padding:16px}"
+        ".card{background:#16213e;border-radius:14px;padding:32px 36px;"
+        "width:100%;max-width:360px;"
+        "box-shadow:0 8px 40px rgba(0,0,0,.5);text-align:center}"
+        "h1{font-size:1.55em;color:#4fc3f7;margin-bottom:4px}"
+        ".sub{color:#78909c;font-size:.9em;margin-bottom:24px}"
+        "dl{background:#0f3460;border-radius:8px;padding:14px 16px;"
+        "text-align:left;margin-bottom:22px}"
+        "dt{color:#90a4ae;font-size:.75em;text-transform:uppercase;"
+        "letter-spacing:.05em;margin-top:10px}"
+        "dt:first-child{margin-top:0}"
+        "dd{color:#fff;font-family:monospace;font-size:.95em;margin-top:2px}"
+        "a.btn{display:block;background:#1a73e8;color:#fff;"
+        "text-decoration:none;padding:12px;border-radius:7px;"
+        "font-size:1em;transition:background .2s}"
+        "a.btn:hover{background:#1557b0}"
+        "</style></head>"
+        "<body><div class='card'>"
+        "<h1>Hello ESP32-C6-Touch</h1>"
+        "<p class='sub'>Waveshare ESP32-C6-Touch-LCD-1.47</p>"
+        "<dl>"
+    );
+
+    char row[80];
+    snprintf(row, sizeof(row), "<dt>IP Address</dt><dd>%s</dd>", ip);
+    httpServer.sendContent(row);
+    snprintf(row, sizeof(row), "<dt>Network</dt><dd>%s</dd>", ssid);
+    httpServer.sendContent(row);
+    snprintf(row, sizeof(row), "<dt>Time</dt><dd>%s</dd>", timeStr);
+    httpServer.sendContent(row);
+
+    httpServer.sendContent(
+        "</dl>"
+        "<a class='btn' href='/settings'>&#9881;&nbsp; Settings</a>"
+        "</div></body></html>"
+    );
 }
 
 static void handleSettings()
