@@ -691,8 +691,8 @@ struct TouchPoint { int16_t x, y; bool pressed; };
 
 static void touchReset()
 {
-    digitalWrite(TOUCH_RST, LOW);  delay(10);
-    digitalWrite(TOUCH_RST, HIGH); delay(50);
+    digitalWrite(TOUCH_RST, LOW);  delay(200);
+    digitalWrite(TOUCH_RST, HIGH); delay(300);
 }
 
 static TouchPoint readTouch()
@@ -700,16 +700,15 @@ static TouchPoint readTouch()
     TouchPoint tp = {0, 0, false};
     Wire.beginTransmission(TOUCH_ADDR);
     Wire.write(0x01);
-    if (Wire.endTransmission(false) != 0) return tp;
-    if (Wire.requestFrom((uint8_t)TOUCH_ADDR, (uint8_t)5) < 5) return tp;
+    if (Wire.endTransmission() != 0) return tp;
+    if (Wire.requestFrom((uint8_t)TOUCH_ADDR, (uint8_t)14) < 14) return tp;
 
-    uint8_t count = Wire.read();
-    uint8_t xh = Wire.read(), xl = Wire.read();
-    uint8_t yh = Wire.read(), yl = Wire.read();
+    uint8_t data[14];
+    for (int i = 0; i < 14; i++) data[i] = Wire.read();
 
-    if (count > 0) {
-        tp.x       = (int16_t)(((xh & 0x0F) << 8) | xl);
-        tp.y       = (int16_t)(((yh & 0x0F) << 8) | yl);
+    if (data[1] > 0) {
+        tp.x       = (int16_t)(((data[2] & 0x0F) << 8) | data[3]);
+        tp.y       = (int16_t)(((data[4] & 0x0F) << 8) | data[5]);
         tp.pressed = true;
     }
     return tp;

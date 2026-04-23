@@ -29,7 +29,7 @@
 #define TOUCH_SCL   19  // Shared with IMU_SCL
 #define TOUCH_RST   20
 #define TOUCH_INT   21  // Active-low interrupt
-#define TOUCH_ADDR  0x3B  // 7-bit I2C address
+#define TOUCH_ADDR  0x63  // 7-bit I2C address
 
 // --- IMU — QMI8658A (I2C, 6-axis accel + gyro) ---------------
 // SA0 pin is tied to GND on this board → address 0x6A.
