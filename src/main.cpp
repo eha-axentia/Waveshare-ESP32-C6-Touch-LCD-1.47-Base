@@ -230,7 +230,6 @@ static void startAP()
 static void stopAP()
 {
     WiFi.softAPdisconnect(true);
-    WiFi.mode(WIFI_STA);
     apRunning = false;
     Serial.println("[AP] stopped");
 }
@@ -271,7 +270,6 @@ static void beginConnectCycle()
     }
 
     wifiState = WS_CONNECTING;
-    if (!apRunning) WiFi.mode(WIFI_STA);
     WiFi.begin(trySSID, pass);
     tryStartMs = millis();
     Serial.printf("[WiFi] Trying %s (slot %d)\n", trySSID, tryOrder[tryIdx]);
