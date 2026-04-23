@@ -319,14 +319,12 @@ from register `0x01`:
 | 3 | Y high nibble (bits 11:8) |
 | 4 | Y low byte (bits 7:0) |
 
-Coordinate range is 12-bit (0–4095). Map to display pixels:
+The AXS5106L reports coordinates already in **display pixel space** (0–171 × 0–319) — no 0–4095 scaling needed. For rotation 0 (portrait) the X axis is mirrored relative to the display, so apply:
 
 ```cpp
-int16_t px = (int16_t)((long)tp.x * LCD_WIDTH  / 4096);
-int16_t py = (int16_t)((long)tp.y * LCD_HEIGHT / 4096);
+int16_t px = (LCD_WIDTH  - 1) - raw_x;
+int16_t py = raw_y;
 ```
-
-Adjust the divisors to the actual max X/Y once measured from corner touches.
 
 The controller requires a hardware reset pulse on RST (GPIO20) before first use.
 

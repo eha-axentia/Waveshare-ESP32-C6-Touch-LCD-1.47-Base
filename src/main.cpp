@@ -859,9 +859,10 @@ void loop()
         lastTouch = now;
         TouchPoint tp = readTouch();
         if (tp.pressed) {
-            Serial.printf("Touch  x=%-4d y=%-4d\n", tp.x, tp.y);
-            int16_t px = (int16_t)((long)tp.x * LCD_WIDTH  / 4096);
-            int16_t py = (int16_t)((long)tp.y * LCD_HEIGHT / 4096);
+            // AXS5106L reports pixel-space coords; rotation-0 needs X mirrored
+            int16_t px = (LCD_WIDTH  - 1) - tp.x;
+            int16_t py = tp.y;
+            Serial.printf("Touch  raw=(%d,%d)  px=(%d,%d)\n", tp.x, tp.y, px, py);
             px = constrain(px, 2,   LCD_WIDTH  - 3);
             py = constrain(py, 213, LCD_HEIGHT - 3);
             gfx->fillCircle(px, py, 3, RGB565_MAGENTA);
